@@ -1,0 +1,78 @@
+#!/usr/local/bin/ruby
+
+# Curshell the easy-operator  Written by Seisei Yamaguchi
+
+
+require 'curses'
+include Curses
+#require 'ftools'
+#require 'open3'
+#require File.dirname( $0 ) + "/cursh.init"
+
+# udlr : ^[[A^[[B^[[C^[[D
+#>> def x(key, value, optional={}); p key; p value; p optional; end 
+#=> nil 
+#>> x("foo", "bar", :context => 123, :time => 456, :type => 789) 
+#"foo" 
+#"bar" 
+#{:time=>456, :type=>789, :context=>123} 
+#=> nil 
+
+module Module__direntry
+	@@direntry = []
+#	@@flag_aa__file__marked = [ [] , [] ]
+#	@@num_a__point_which_file = [ 0 , 0 ]
+#	@@num_a__point_which_file__old = [ 0 , 0 ]
+	@@h__file__stat = {}
+#	@@str_a__path = [ Dir.getwd , Dir.getwd ]
+#	@@str_a__path__old = @@str_a__path.clone
+##	Dir.chdir @@str_a__path[ $num__active_dirlist ]
+#	@@flag_a__cd_parent = [ false ,  false ]
+end
+
+	def read  #( str__path )  # Dirlist to global-array . It must to be at least non global-array . 
+		# Thread read
+#		return if ! $flag_ah__initialize[ 'read__direntry' ][ @num__id__list ]
+
+#		str__path = @@str_a__path[ @num__id__list ]
+		str__path = Dir.pwd
+
+#		@@h__file__stat[ str__path ] = {}
+#		[ 'orig' , 'sort' ].each{ | str__orig_sort | @ah__direntry[ str__orig_sort ] = [] }
+
+		fp__path = Dir.open( str__path )
+		begin
+			fp__path.each{ | file__name | @ah__direntry[ 'orig' ].push( file__name ) }
+		ensure
+			fp__path.close
+		end
+
+#		@@flag_aa__file__marked[ @num__id__list ] = []
+#		@ah__direntry[ 'orig' ].each{ | file__name |
+#			next if file__name  =~ /^\.{1,2}$/
+#			@ah__direntry[ 'sort' ].push( file__name )
+#			@@flag_aa__file__marked[ @num__id__list ].push( false )
+#		}
+#		@ah__direntry[ 'orig' ].each{ | file__name |
+#			@@h__file__stat[ str__path ][ file__name ] = File.lstat( "#{ str__path }/#{ file__name }" )
+#		}
+#		a__sorting__1 = []
+#		a__sorting__2 = []
+#		@ah__direntry[ 'sort' ].each{ | file__name |
+#			if @@h__file__stat[ str__path ][ file__name ].directory?
+#				a__sorting__1.push file__name
+#			else
+#				a__sorting__2.push file__name
+#			end
+#		}
+#		a__sorting__1 = a__sorting__1.sort
+#		a__sorting__2 = a__sorting__2.sort
+#		@ah__direntry[ 'sort' ] = [ a__sorting__1 , a__sorting__2 ].flatten
+##		@ah__direntry[ 'sort' ] = @ah__direntry[ 'sort' ].sort
+#	
+#		@@num_a__point_which_file[ @num__id__list ] = 0
+#		if @@flag_a__cd_parent[ @num__id__list ]
+#			@@num_a__point_which_file[ @num__id__list ] = @ah__direntry[ 'sort' ].rindex( File.basename( @@str_a__path__old[ @num__id__list ] ) )
+#		end
+#		@@num_a__point_which_file[ @num__id__list ] = 0 if @@num_a__point_which_file[ @num__id__list ] == nil
+	end

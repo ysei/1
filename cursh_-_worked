@@ -132,8 +132,8 @@ end
 module Module__direntry
 #	@@direntry = []
 	@@flag_a__file__marked = []
-#	@@num__point_which_file = 0
-#	@@num__point_which_file__old = 0
+	@@num__point_which_file = 0
+	@@num__point_which_file__old = 0
 	@@flag__cd_parent = false
 end
 
@@ -322,8 +322,6 @@ class User__ui_win__base  # curses windows
 	def initialize( num__id__list = 0 )  # set size
 		@num__id__list = num__id__list
 		@win__size = User__win__size.new( num__id__list )
-	@num__point_which_file = 0
-	@num__point_which_file__old = 0
 	end
 
 	def set__cell__iterator( num__id__win , str__id__base_win , str_a__url )
@@ -381,13 +379,6 @@ class User__ui_win__base  # curses windows
 #	end
 end
 class User__ui_win__010__dirlist < User__ui_win__base
-	def initialize( num__id__list )
-		super
-		@num__start__listing_file = 0
-		@num__start__listing_file__old = @num__start__listing_file.to_s.to_i
-		@num__cur__direction = 1  # upper or lower
-		@num__locate__cur__old = 0
-	end
 #	def set__cell( num__y , num__x , win__which , str__to_put , flag__standout = false )
 #	def set__cell( str__id__base_win , num__id__win = 0 , str__id__cell = '' , str_a__url = [ 'dummy' ] , flag_h__status = {} , h__cell = {} )  # Print each cell 
 	def set__cell( str__id__base_win , num__id__win = 0 , str__id__cell = '' , str_a__url = [ 'dummy' ] , flag_h__status = {} , num__y = 0 )  # Print each cell 
@@ -482,23 +473,62 @@ class User__ui_win__010__dirlist < User__ui_win__base
 			end
 		end
 	end
-	def set__file__pointed( num__point_which_file , num__point_which_file__old )
-		@num__point_which_file = num__point_which_file
-		@num__point_which_file__old = num__point_which_file__old
+end
+class User__ui_win__030__status_line < User__ui_win__base
+	def set__cell( str__id__base_win , num__id__win = 0 , str__id__cell = '' , str_a__url = [ 'dummy' ] , flag_h__status = {} , num__y = 0 )  # Print each cell 
+			@flag_h__status = flag_h__status
+		set__cell__iterator( num__id__win , str__id__base_win , str_a__url ){
+#		when '030__status_line'
+		flag__standout = false
+		str__to_put = '=' * $num_h__size__screen[ 'x' ]
+			[ " Curshell ver. 0.093 designed by Seisei Yamaguchi " ].each{ | str__credit |
+				str__to_put[ $num_h__size__screen[ 'x' ] - str__credit.length - 3 , str__credit.length ] = str__credit
+			}
+#		      end
+		@ha__to_put.unshift( { 'str__to_put' => str__to_put , 'flag__standout' => flag__standout } )
+	      }
 	end
+end
+
+class User__dirlist
+	include Module__direntry
+	def initialize( num__id__list )
+		@num__id__list = num__id__list
+		@num__id__this_win = $num_h__win__id[ '010__dir_list' ] + @num__id__list
+		@num__locate__cur__old = 0
+
+	@num__start__listing_file = 0
+	@num__start__listing_file__old = @num__start__listing_file.to_s.to_i
+	@num__cur__direction = 1
+
+		@ah__direntry = { 'orig' => [] , 'sort' => [] }
+
+	@str__path = Dir.getwd
+	@str__path__old = @str__path.clone
+
+		@num_h__inkey__continue = { 'up' => 0.0 , 'down' => 0.0 , 'rollup' => 0.0 , 'rolldown' => 0.0 }  # move__cursor only . 
+		@win__size = User__win__size.new( num__id__list )
+		@ui_win = User__ui_win__010__dirlist.new( num__id__list )
+	end
+
+
 	def listing__dir  # ( num__id__list )
+#		$win__dirlist[ num__id__list ].read__direntry
+		read__direntry
+
 		num__id__list = @num__id__list
 
 		@flag__this_list_is_active = $num__active_dirlist == num__id__list
 		@flag__first_time_after_inactive = $num__active_dirlist != $num__active_dirlist__old
 		@flag_h__redraw__all = $flag__initialize
 
-		str__path = $win__dirlist[ num__id__list ].instance_variable_get( '@str__path' )
-#		str__path = @str__path
+#		str__path = $win__dirlist[ num__id__list ].instance_variable_get( '@str__path' )
+		str__path = @str__path
 
 		num__start__listing = @num__start__listing_file
 		@num__start__listing_file__old = num__start__listing
 		( @num__start__listing_file , @num__locate__cur ) = num_a__get__y__locate( $win__dirlist[ num__id__list ].direntry__get.size , num__start__listing )
+
 
 
 		num_h__size__dirlist = @win__size.instance_variable_get( '@num_h__size__dirlist' )
@@ -510,51 +540,46 @@ class User__ui_win__010__dirlist < User__ui_win__base
 			end
 		num__lines__draw = 2 if num__lines__draw < 2
 
-		str_a__direntry = $win__dirlist[ num__id__list ].direntry__get  # dirty
-#		str_a__direntry = direntry__get
-		for num__count__y in 0 .. num_h__size__dirlist[ 'y' ] - 1
-#	    p num__count__y
-#			num__cur__direction = $win__dirlist[ num__id__list ].instance_variable_get( '@num__cur__direction' )
-			num__cur__direction = @num__cur__direction
-			num__count__y = num_h__size__dirlist[ 'y' ] - 1 - num__count__y if num__cur__direction > 0  # negative
+#		str_a__direntry = $win__dirlist[ num__id__list ].direntry__get
+		str_a__direntry = direntry__get
+		for @num__count__y in 0 .. num_h__size__dirlist[ 'y' ] - 1
+			num__cur__direction = $win__dirlist[ num__id__list ].instance_variable_get( '@num__cur__direction' )
+			@num__count__y = num_h__size__dirlist[ 'y' ] - 1 - @num__count__y if num__cur__direction > 0
 			@flag_h__file = {
-				'marked'  => @@flag_a__file__marked[ @num__start__listing_file + num__count__y ] ,
-				'pointed' => num__count__y == @num__locate__cur && @flag__this_list_is_active
+				'marked'  => @@flag_a__file__marked[ @num__start__listing_file + @num__count__y ] ,
+				'pointed' => @num__count__y == @num__locate__cur && @flag__this_list_is_active
 			}
 			flag_h__cleared__line = false
 			if @num__start__listing_file != @num__start__listing_file__old
-				flag_h__cleared__line = listing__dir__clear_line( num__count__y , @flag_h__file[ 'pointed' ] | @flag_h__file[ 'marked' ] & @flag__this_list_is_active )
+				flag_h__cleared__line = listing__dir__clear_line( @num__count__y , @flag_h__file[ 'pointed' ] | @flag_h__file[ 'marked' ] & @flag__this_list_is_active )
 			end
 			if @flag_h__redraw__all
 			else
-				if ( ( @num__locate__cur - num__count__y ) * num__cur__direction > num__lines__draw or
-					( @num__locate__cur - num__count__y ) * num__cur__direction < 0 )
+				if ( ( @num__locate__cur - @num__count__y ) * num__cur__direction > num__lines__draw or
+					( @num__locate__cur - @num__count__y ) * num__cur__direction < 0 )
 				then
-					next if @num__locate__cur__old != num__count__y  # for refresh the line there was cursor before moving cursor
+					next if @num__locate__cur__old != @num__count__y  # for refresh the line there was cursor before moving cursor
 				end
 			end
-			flag_h__cleared__line = listing__dir__clear_line( num__count__y , @flag_h__file[ 'pointed' ] | @flag_h__file[ 'marked' ] & @flag__this_list_is_active )
+			flag_h__cleared__line = listing__dir__clear_line( @num__count__y , @flag_h__file[ 'pointed' ] | @flag_h__file[ 'marked' ] & @flag__this_list_is_active )
 			if str_a__direntry.size == 0
-#				num_a__locate__dirlist = @num_aa__locate__dirlist  # [ num__id__list ]
+				num_a__locate__dirlist = @num_aa__locate__dirlist[ num__id__list ]
 #				num_a__locate__dirlist = $curses_wins.instance_variable_get( '@num_aa__locate__dirlist' )[ num__id__list ]
-				num_a__locate__dirlist = @win__size.instance_variable_get( '@num_aa__locate__dirlist' )[ num__id__list ]
 				$mgr__window.setpos( num_a__locate__dirlist[ 0 ] + @num__locate__cur , 14 + num_a__locate__dirlist[ 1 ] )
 #				setpos( num_a__locate__dirlist[ 0 ] + @num__locate__cur , 14 + num_a__locate__dirlist[ 1 ] )
 #				setpos( num_a__locate__dirlist[ 0 ] + @num__locate__cur , 14 + num_a__locate__dirlist[ 1 ] ,
 #				       $num_h__win__id[ '010__dir_list' ] + num__id__list )
 				next
 			end
-#	    p num__count__y
 #			next if $a__keybuf.length > 7
-#			@ui_win.draw__list( str__path , str_a__direntry , @num__start__listing_file , num__count__y , @flag_h__file )
-			draw__list( str__path , str_a__direntry , @num__start__listing_file , num__count__y , @flag_h__file )
+			@ui_win.draw__list( str__path , str_a__direntry , @num__start__listing_file , @num__count__y , @flag_h__file )
 #			draw__list()
 		end
 		set__flag__refresh__each_win( @flag__first_time_after_inactive )
 
 		line__spaces( 0 , '020__path' )  # Initialize screen , should be outsource . 
-#		@ui_win.set__cell( '020__path' , num__id__list , '' , [ str__path ] )
-		set__cell( '020__path' , num__id__list , '' , [ str__path ] )
+		@ui_win.set__cell( '020__path' , num__id__list , '' , [ str__path ] )
+#		set__cell( '020__path' , num__id__list , '' , [ str__path ] )
 
 		@num__locate__cur__old = @num__locate__cur.to_s.to_i
 	end
@@ -573,7 +598,7 @@ class User__ui_win__010__dirlist < User__ui_win__base
 				$flag_h__refresh[ num__id__this_win ] = true
 				$flag_h__refresh[ $num_h__win__id[ '020__path' ] + num__id__list ] = true
 			end
-			if ( @num__point_which_file != @num__point_which_file__old or flag__first_time_after_inactive )
+			if ( @@num__point_which_file != @@num__point_which_file__old or flag__first_time_after_inactive )
 				$flag_h__refresh[ num__id__this_win ] = true
 				$flag_h__refresh[ $num_h__win__id[ '040__info' ] ] = true
 			end
@@ -585,22 +610,23 @@ class User__ui_win__010__dirlist < User__ui_win__base
 
 
 	def num_a__get__y__locate( num__size__a__direntry , num__start__listing )  # return [ start , pointed ] . Called from only listing__dir . 
-		num__point = @num__point_which_file  # current point
+		num__point = @@num__point_which_file
 #		num__size__y = @num_h__size__dirlist[ 'y' ]
-		num__size__y = @win__size.instance_variable_get( '@num_h__size__dirlist' )[ 'y' ]  # get screen size y
-#		num__dif = num__point - ( num__size__y - 1 )
-		num__start__listing = 0 if num__size__a__direntry <= num__size__y  # indicate all files
-		num__locate__cur__y = num__point - num__start__listing  # cursor locate y  # cant convert into fixnum
-		num__limit = num__size__a__direntry - 1 - num__start__listing  # stopper to break from loop of each each file indication
+		num__size__y = @win__size.instance_variable_get( '@num_h__size__dirlist' )[ 'y' ]
+		num__dif = num__point - ( num__size__y - 1 )
 
-		if num__point < num__start__listing  # adjust , fix . upper
-			num__locate__cur__y = 0
+		num__start__listing = 0 if num__size__a__direntry <= num__size__y
+		num__locate__cur = num__point - num__start__listing  # cant convert into fixnum
+		num__limit = num__size__a__direntry - 1 - num__start__listing
+
+		if num__point < num__start__listing
+			num__locate__cur = 0
 			num__start__listing = num__point
-		elsif num__point - num__start__listing > ( num__size__y - 1 )  # over screen y
+		elsif num__point - num__start__listing > ( num__size__y - 1 )
 			num__start__listing = num__point - ( num__size__y - 1 )
-			num__locate__cur__y = num__size__y - 1
+			num__locate__cur = num__size__y - 1
 		end
-		return num__start__listing , num__locate__cur__y
+		return num__start__listing , num__locate__cur
 	end
 
 	def line__spaces( num__y , str__id__win , flag__standout = false )
@@ -611,55 +637,12 @@ class User__ui_win__010__dirlist < User__ui_win__base
 #		self.addstr( num__y , 0 , num__id__win , ' ' * @num_h__size__dirlist[ 'x' ] , flag__standout )
 #			@num_hh__win__size[ '020__path' ][ 'x' ] = num_h__size__window[ 'x' ]
 	end
-end
-class User__ui_win__030__status_line < User__ui_win__base
-	def set__cell( str__id__base_win , num__id__win = 0 , str__id__cell = '' , str_a__url = [ 'dummy' ] , flag_h__status = {} , num__y = 0 )  # Print each cell 
-			@flag_h__status = flag_h__status
-		set__cell__iterator( num__id__win , str__id__base_win , str_a__url ){
-#		when '030__status_line'
-		flag__standout = false
-		str__to_put = '=' * $num_h__size__screen[ 'x' ]
-			[ " Curshell ver. 0.094 designed by Seisei Yamaguchi " ].each{ | str__credit |
-				str__to_put[ $num_h__size__screen[ 'x' ] - str__credit.length - 3 , str__credit.length ] = str__credit
-			}
-#		      end
-		@ha__to_put.unshift( { 'str__to_put' => str__to_put , 'flag__standout' => flag__standout } )
-	      }
-	end
-end
 
-class User__dirlist
-	include Module__direntry
-	def initialize( num__id__list )
-		@num__id__list = num__id__list
-		@num__id__this_win = $num_h__win__id[ '010__dir_list' ] + @num__id__list
-
-		@ah__direntry = { 'orig' => [] , 'sort' => [] }
-
-	@str__path = Dir.getwd
-	@str__path__old = @str__path.clone
-
-		@num_h__inkey__continue = { 'up' => 0.0 , 'down' => 0.0 , 'rollup' => 0.0 , 'rolldown' => 0.0 }  # move__cursor only . 
-		@win__size = User__win__size.new( num__id__list )
-		@ui_win = User__ui_win__010__dirlist.new( num__id__list )
-	@num__point_which_file = 0
-	@num__point_which_file__old = 0
-	end
-
-
-	def listing__dir  # ( num__id__list )
-#		$win__dirlist[ num__id__list ].read__direntry
-		read__direntry
-
-#		num__id__list = @num__id__list
-		@ui_win.set__file__pointed( @num__point_which_file , @num__point_which_file__old )
-		@ui_win.listing__dir
-	end
 
 
 	def init__value__1
 
-		@num__point_which_file__old = @num__point_which_file  # .to_s.to_i
+		@@num__point_which_file__old = @@num__point_which_file  # .to_s.to_i
 #		@@num_a__point_which_file__old = @@num_a__point_which_file.to_s.to_i
 		$num__active_dirlist__old = $num__active_dirlist.to_s.to_i
 		@@flag__cd_parent = false
@@ -672,7 +655,7 @@ class User__dirlist
 		@@flag_a__file__marked
 	end
 	def marking  # Called from move__cursor only . 
-		num__point = @num__point_which_file
+		num__point = @@num__point_which_file
 		@@flag_a__file__marked[ num__point ] =
 			! @@flag_a__file__marked[ num__point ]
 		case @@flag_a__file__marked[ num__point ]
@@ -684,7 +667,7 @@ class User__dirlist
 	end
 	def pointing( str__key )
 		num__id__list = @num__id__list
-		num__point = @num__point_which_file
+		num__point = @@num__point_which_file
 #		str_a__direntry = @@direntry[ num__id__list ].get
 		str_a__direntry = direntry__get
 		flag__up_down = false
@@ -694,26 +677,22 @@ class User__dirlist
 		when 'up'
 			num__point -= ( 1 + @num_h__inkey__continue[ str__key ].round )
 			@num_h__inkey__continue[ str__key ] += 0.3
-#			@num__cur__direction = -1
-			@ui_win.instance_variable_set( '@num__cur__direction' , -1 )
+			@num__cur__direction = -1
 			flag__up_down = true
 		when 'down'
 			num__point += ( 1 + @num_h__inkey__continue[ str__key ].round )
 			@num_h__inkey__continue[ str__key ] += 0.3
-#			@num__cur__direction = 1
-			@ui_win.instance_variable_set( '@num__cur__direction' , 1 )
+			@num__cur__direction = 1
 			flag__up_down = true
 		when 'rollup'
 			num__point -= @win__size.instance_variable_get( '@num_h__size__dirlist' )[ 'y' ] + @num_h__inkey__continue[ str__key ] / 2
 			@num_h__inkey__continue[ str__key ] += 1
-#			@num__cur__direction = -1
-			@ui_win.instance_variable_set( '@num__cur__direction' , -1 )
+			@num__cur__direction = -1
 			flag__up_down = true
 		when 'rolldown'
 			num__point += @win__size.instance_variable_get( '@num_h__size__dirlist' )[ 'y' ] + @num_h__inkey__continue[ str__key ] / 2
 			@num_h__inkey__continue[ str__key ] += 1
-#			@num__cur__direction = 1
-			@ui_win.instance_variable_set( '@num__cur__direction' , 1 )
+			@num__cur__direction = 1
 			flag__up_down = true
 		end
 
@@ -725,7 +704,7 @@ class User__dirlist
 			end
 
 			if ( num__point != 0 or num__point != str_a__direntry.size - 1 ) and  # not top  or  not bottom
-				num__point != @num__point_which_file__old  # not old-point . Instantly , point is moved . 
+				num__point != @@num__point_which_file__old  # not old-point . Instantly , point is moved . 
 			then
 				$num__countdown__force_redraw[ num__id__list ] = 30  # reset counter . It shall be pass to reset routine . 
 			elsif ( num__point == 0 or num__point == str_a__direntry.size - 1 ) and  # top or bottom
@@ -733,7 +712,7 @@ class User__dirlist
 			then
 				$num__countdown__force_redraw[ num__id__list ] = 2
 			end
-			@num__point_which_file = num__point  # set new point
+			@@num__point_which_file = num__point  # set new point
 		else  # not updown 
 			[ 'up' , 'down' , 'rollup' , 'rolldown' ].each{ | local__str__key |
 				@num_h__inkey__continue[ local__str__key ] -= 1.0  # acceleration lerated ? . 
@@ -753,11 +732,11 @@ class User__dirlist
 		@ah__direntry[ 'sort' ]  = $mgr__file.read__direntry( str__path )
 		@@flag_a__file__marked = [ false ] * @ah__direntry[ 'sort' ].size
 
-		@num__point_which_file = 0
+		@@num__point_which_file = 0
 		if @@flag__cd_parent
-			@num__point_which_file = @ah__direntry[ 'sort' ].rindex( File.basename( @str__path__old ) )
+			@@num__point_which_file = @ah__direntry[ 'sort' ].rindex( File.basename( @str__path__old ) )
 		end
-		@num__point_which_file = 0 if @num__point_which_file == nil
+		@@num__point_which_file = 0 if @@num__point_which_file == nil
 		
 #		$flag_ah__initialize[ 'read__direntry' ][ @num__id__list ] = false
 	end
@@ -772,7 +751,7 @@ class User__dirlist
 		str__path = @str__path
 		if str__dir == nil  # pointed dir
 #			str__dir = "#{ str__path }/#{ @direntry.get[ @@num_a__point_which_file[ @num__id__list ] ] }"
-			str__dir = "#{ str__path }/#{ direntry__get[ @num__point_which_file ] }"
+			str__dir = "#{ str__path }/#{ direntry__get[ @@num__point_which_file ] }"
 		end
 		Dir.chdir str__dir
 
@@ -780,7 +759,7 @@ class User__dirlist
 		str__path = Dir.getwd
 		$flag_ah__initialize[ 'read__direntry' ][ @num__id__list ] = true
 		$flag__initialize = true
-		@num__point_which_file = 0
+		@@num__point_which_file = 0
 
 		@str__path = str__path
 	end
@@ -794,7 +773,7 @@ class User__dirlist
 		str__path = @str__path
 #		a__direntry = @@direntry[ @num__id__list ].get
 		a__direntry = win__dirlist.direntry__get
-		num__point_which_file = @num__point_which_file
+		num__point_which_file = @@num__point_which_file
 		str__entry__with_path = "#{ str__path }/#{ a__direntry[ num__point_which_file ] }"
 		case str__key  # It should be rewrote more smart . To hash based ? . 
 		when 'cr'
@@ -827,7 +806,7 @@ class User__dirlist
 end
 
 class User__mgr__file
-#	include Module__direntry
+	include Module__direntry
 #	include Module__window
 	def initialize
 #	  @num__id__parts__active = 0
@@ -972,7 +951,7 @@ def init__all()
 end
 
 class User__cpo  # Central Processing Object
-#	include Module__direntry
+	include Module__direntry
 	def initialize
 		@num__active_dirlist = 0
 		@num__active_dirlist__old = @num__active_dirlist.to_s.to_i

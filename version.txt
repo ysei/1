@@ -1,7 +1,22 @@
+
+251 Hirabari Siten
+
 ToDo
 	* First , refactoring all without adding any functions . 
 	* Fix refresh timing of screen . 
 
+
+0020031108 0.094
+	* Thought and refactored . 
+
+00200311 0.093
+	* Thought and refactored . 
+
+00200310 0.092
+	* Thought and refactored . 
+
+00200310 0.091
+	* Thought and refactored . 
 
 0020031015 0.09
 	* Refactored and refactored . 
