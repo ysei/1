@@ -5,6 +5,7 @@
 # 0.00 
 # 0.03 0020011127
 # 0.04 0020011130
+# 0.05 0020011206
 
 require 'curses'
 include Curses
@@ -141,11 +142,15 @@ def get__str__file_stat( str__filename , str__kind__stat , num__id__list )
 			case str__ftype
 			when 'file'
 				num__size = obj.size
+				num__length__size = num__size.to_s.length
+				num__length__num__unit = num__columns - 2 - num__length__size
 				num__size > 9.5 * 1024 * 1024 * 1024 ?
-					str__size__unit = sprintf( "%.#{ 14 - 2 - num__size.to_s.length }s" , ( ( num__size.to_f / 1024 / 1024 / 102.4 ).round.truncate.to_f / 10 ).to_s.sub( /\.$/ ){ '.'} ) + "G" :
+#					str__size__unit = sprintf( "%.#{ num__length__num__unit }s" , ( ( num__size.to_f / 1024 / 1024 / 102.4 ).round.truncate.to_f / 10 ).to_s.sub( /\.$/ ){ '.'} ) + "G" :
+					str__size__unit = sprintf( "%.#{ num__length__num__unit }s" , ( ( num__size.to_f / 1024 / 1024 / 1024 ).round.truncate ).to_s.sub( /\.$/ ){ '.'} ) + "G" :
 					str__size__unit = ''
 				num__size > 9.5 * 1024 * 1024 ?
-					str__size__unit = sprintf( "%.#{ 14 - 2 - num__size.to_s.length }s" , ( ( num__size.to_f / 1024 / 102.4 ).round.truncate.to_f / 10 ).to_s.sub( /\.$/ ){ '.'} ) + "M" :
+					str__size__unit = sprintf( "%.#{ num__length__num__unit }s" , ( ( num__size.to_f / 1024 / 1024 ).round.truncate ).to_s.sub( /\.$/ ){ '.'} ) + "M" :
+#					str__size__unit = sprintf( "%.#{ num__length__num__unit }s" , ( ( num__size.to_f / 1024 / 102.4 ).round.truncate.to_f / 10 ).to_s.sub( /\.$/ ){ '.'} ) + "M" :
 					str__size__unit = ''
 				num__spaces = num__columns - str__size__unit.length - num__size.to_s.length
 				return sprintf( "%s" + ' ' * num__spaces + "%#{ num__columns - str__size__unit.length - num__spaces }d", str__size__unit , num__size )
@@ -169,7 +174,7 @@ def move__cursor
 	num__id__list = $num__active_dirlist
 	num__point = $num__point_which_file[ num__id__list ]
 	
-		$flag_h__force_redraw[ 'dir_list' ][ num__id__list ] = false
+		$flag_ah__force_redraw[ 'dir_list' ][ num__id__list ] = false
 	# $bit__direction  00DUrldu
 	if $bit__direction != 0 then
 #	if $bit__direction && 0b111111 != 0 then
@@ -192,7 +197,7 @@ def move__cursor
 		end
 		if $bit__direction[ 4 ] == 1 then
 				num__point -= $num__size__dirlist__y + $num_a__inkey__continue[ 4 ] / 2
-				$num_a__cur__direction[ $num__active_dirlist ] = -1
+				$num_a__cur__direction[ num__id__list ] = -1
 			$num_a__inkey__continue[ 4 ] += 1
 		else
 			$num_a__inkey__continue[ 4 ] -= 1
@@ -200,7 +205,7 @@ def move__cursor
 		end
 		if $bit__direction[ 5 ] == 1 then
 				num__point += $num__size__dirlist__y + $num_a__inkey__continue[ 5 ] / 2
-				$num_a__cur__direction[ $num__active_dirlist ] = 1
+				$num_a__cur__direction[ num__id__list ] = 1
 			$num_a__inkey__continue[ 5 ] += 1
 		else
 			$num_a__inkey__continue[ 5 ] -= 1
@@ -227,7 +232,7 @@ def move__cursor
 			end
 		end
 	else
-		$flag_h__force_redraw[ 'dir_list' ][ num__id__list ] = true if $num__countdown__force_redraw == 0
+		$flag_ah__force_redraw[ 'dir_list' ][ num__id__list ] = true if $num__countdown__force_redraw == 0
 			$num__countdown__force_redraw -= 1 # if $num__countdown__force_redraw > -65535
 	end
 end
@@ -267,11 +272,15 @@ def listing__dir( num__id__list )
 	( num__start__listing_file , num__locate__cur ) = num_a__get__y__locate( num__id__list )
 
 	for num__count__y in 0 .. $num__size__dirlist__y - 1
-		if ! $flag_h__force_redraw[ 'dir_list' ][ num__id__list ] and ! $flag__initialize then
-		if ( num__locate__cur - num__count__y ).abs > 2 then # $a_keybuf.length then
-#		if ( num__locate__cur - num__count__y ) * $num_a__cur__direction[ num__id__list ] > 1 then # $a_keybuf.length then
-		  next
-		end
+		if ! $flag_ah__force_redraw[ 'dir_list' ][ num__id__list ] and ! $flag__initialize then
+			num__lines__draw = 7 - $a__keybuf.length
+			num__lines__draw = 2 if num__lines__draw < 2
+			if ( num__locate__cur - num__count__y ) * $num_a__cur__direction[ num__id__list ] > num__lines__draw or
+				( num__locate__cur - num__count__y ) * $num_a__cur__direction[ num__id__list ] < 0
+			then
+#				str__tmp += "l#{num__locate__cur} c#{ num__count__y } #{ $num_a__cur__direction[ num__id__list ] } "
+				next
+			end
 		end
 		str__filename = $aah__direntry[ 'sort' ][ num__id__list ][ num__start__listing_file + num__count__y ]
 		flag__marked = $flag_aa__file__marked[ num__id__list ][ num__start__listing_file + num__count__y ]
@@ -315,10 +324,11 @@ def listing__dir( num__id__list )
 			end
 		end
 	end
+#				add_str( 1 + num__id__list , 0 , $h__win__id[ 'info' ] , "#{str__tmp}    e" )
 #	end
 
 	if flag__this_list_is_active then
-		if $flag__initialize or $flag_h__force_redraw[ 'dir_list' ][ num__id__list ] then
+		if $flag__initialize or $flag_ah__force_redraw[ 'dir_list' ][ num__id__list ] then
 			$flag_h__refresh[ num__id__this_win ] = true
 			$flag_h__refresh[ $h__win__id[ 'path' ] + num__id__list ] = true
 		end
@@ -431,8 +441,8 @@ def init__all()
 	$aah__direntry[ 'sort' ] = [ [] , [] ]
 
 
-	$flag_h__force_redraw = {}
-	$flag_h__force_redraw[ 'dir_list' ] = [ false , false ]
+	$flag_ah__force_redraw = {}
+	$flag_ah__force_redraw[ 'dir_list' ] = [ false , false ]
 	$num__countdown__force_redraw = 0
 end
 
@@ -483,7 +493,7 @@ def dir__chdir( str__dir )
 		$str_a__path[ $num__active_dirlist ] = Dir.getwd
 	$flag_ah__initialize[ 'read__direntry' ][ $num__active_dirlist ] = true
 		$flag__initialize = true
-		$flag_h__force_redraw[ 'dir_list' ][ $num__active_dirlist ] = true
+		$flag_ah__force_redraw[ 'dir_list' ][ $num__active_dirlist ] = true
 end
 def get__code__ctrl__2__left_right( str__left_right )
 	num_h__left_right = { 'left' => 0 , 'right' => 1 }
@@ -657,7 +667,7 @@ begin
 		drawing
 
 		add_str( 0 , 0 , $h__win__id[ 'status_line' ] , "=" * $num__size__screen__x )
-		[ " Curshell ver. 0.04 designed by Seisei Yamaguchi " ].each{ | str__credit |
+		[ " Curshell ver. 0.05 designed by Seisei Yamaguchi " ].each{ | str__credit |
 			add_str( 0 , $num__size__screen__x - str__credit.length - 3 , $h__win__id[ 'status_line' ] , str__credit )
 		}
 #	while ! $thread__inkey.stop? 
