@@ -1,10 +1,15 @@
 
-#
-# 0.00 
-# 0.03 0020011127
-# 0.04 0020011130
+0020011221 0.06
+	Supported file size indication of xx.xM . 
+	Refreshing every pseudo-int , usually . 
+	Cursor of base window chases pointed file . 
+	etc . 
 
-This vertical blank interrupt emulation code is suspended from less time of multi threading . 
+0020011206 0.05
+	Earlier release from help to my father who got cancer . 
+
+0020011130 0.04
+	This vertical blank interrupt emulation code is suspended from less time of multi threading . 
 
 #$thread__timer__1 = Thread.start do
 #	loop do
@@ -33,5 +38,7 @@ This vertical blank interrupt emulation code is suspended from less time of mult
 #	end
 #end
 
-20011206 0.05
-	Earlier release from help to my father who got cancer . 
+
+0020011127 0.03 
+
+# 0.00 

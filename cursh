@@ -80,7 +80,8 @@ def init__curses()
 		num_aah__win[ 'info' ] = [ [ num_h__win__size__y[ 'info' ] - 1 , num__size__window__x , 0 , 0 ] ]
 
 		$num_a__locate__dirlist = [ [ num_h__win__size__y[ 'info' ] + num_h__win__size__y[ 'path' ] , 0 ] ,
-			[ num_h__win__size__y[ 'info' ] + num_h__win__size__y[ 'path' ] , $num__size__dirlist__x + num__size__window__x % 2 ] ]
+#			[ num_h__win__size__y[ 'info' ] + num_h__win__size__y[ 'path' ] , $num__size__dirlist__x + num__size__window__x % 2 ] ]
+			[ num_h__win__size__y[ 'info' ] + num_h__win__size__y[ 'path' ] , ( num__size__window__x >> 1 ) + 1 ] ]
 	end
 
 	$win = {}
@@ -134,31 +135,60 @@ def add_str( y , x , win__which , string , flag__standout = false )
 	$win[ win__which ].standend if flag__standout
 end
 
+def round__limit_length( num__src , num__max_length )  # sisya_gonyuu , str_length based ( Include length of '.' ) . 
+	num__src = num__src.to_f
+	num__diff = num__src.to_s.length - num__max_length
+	if num__diff > 0 then
+		num__length__str__int_part = num__src.to_i.to_s.length
+		return num__src.round if num__length__str__int_part > num__max_length
+
+		if ( num__src - num__src.to_i ).nonzero? then
+			flag__1st_only =
+				if num__length__str__int_part + 1 == num__max_length then true  # 1 means '.'.length
+				else false
+				end
+			num__shift = num__max_length - num__length__str__int_part - 1  # 1 means '.'.length
+			num__shift = 0 if num__shift < 0 or flag__1st_only
+
+			num__src *= 10 ** num__shift
+#			num__src = num__src.round.to_f
+			num__src = num__src.to_i.to_f
+			num__src /= 10 ** num__shift
+		else
+			return num__src
+		end
+#		if num__length__str__int_part != num__src.to_i.to_s.length then
+	end
+	return num__src
+end
+def str__round__limit_length( num__src , num__max_length )
+	return round__limit_length( num__src , num__max_length ).to_s  # .gsub( /\.0$/ ){ '' }
+end
 def get__str__file_stat( str__filename , str__kind__stat , num__id__list )
 	obj = $h__file__stat[ $str_a__path[ num__id__list ] ][ str__filename ]
 	case str__kind__stat
 	when 'size'
-		[ obj.ftype ].each{ | str__ftype |
-			num__columns = 14
-			case str__ftype
-			when 'file'
-				num__size = obj.size
-				num__length__size = num__size.to_s.length
-				num__length__num__unit = num__columns - 2 - num__length__size
-				num__size > 9.5 * 2 ** 30 ?
-#					str__size__unit = sprintf( "%.#{ num__length__num__unit }s" , ( ( num__size.to_f / 1024 / 1024 / 102.4 ).round.truncate.to_f / 10 ).to_s.sub( /\.$/ ){ '.'} ) + "G" :
-					str__size__unit = sprintf( "%.#{ num__length__num__unit }s" , ( ( num__size.to_f / 2 ** 30 ).truncate ).to_s.sub( /\.$/ ){ '.' } ) + "G" :
-					str__size__unit = ''
-				num__size > 9.5 * 2 ** 20 ?
-					str__size__unit = sprintf( "%.#{ num__length__num__unit }s" , ( ( num__size.to_f / 2 ** 20 ).truncate ).to_s.sub( /\.$/ ){ '.' } ) + "M" :
-#					str__size__unit = sprintf( "%.#{ num__length__num__unit }s" , ( ( num__size.to_f / 1024 / 102.4 ).round.truncate.to_f / 10 ).to_s.sub( /\.$/ ){ '.'} ) + "M" :
-					str__size__unit = ''
-				num__spaces = num__columns - str__size__unit.length - num__size.to_s.length
-				return sprintf( "%s" + ' ' * num__spaces + "%#{ num__columns - str__size__unit.length - num__spaces }d", str__size__unit , num__size )
-			else
-				return sprintf( "%s%13d", str__ftype[ 0 .. 0 ].upcase , obj.size.to_i )
-			end
-		}
+		str__ftype = obj.ftype
+		num__columns = 14
+		case str__ftype
+		when 'file'
+			num__size = obj.size
+			num__length__size = num__size.to_s.length
+			num__length__num__unit = num__columns - 2 - num__length__size
+			str__size__unit = ''
+			ah__unit = { 'M' => [ 20 , 'dummy' ] , 'G' => [ 30 , 'dummy' ] }
+			[ 'G' , 'M' ].each{ | str__letter__unit |
+				if num__size > 9.5 * 2 ** ah__unit[ str__letter__unit ][ 0 ] then
+					str__size__unit =
+						str__round__limit_length( num__size.to_f / ( 1 << ah__unit[ str__letter__unit ][ 0 ] ) , num__length__num__unit ) + str__letter__unit
+					break
+				end
+			}
+			num__spaces = num__columns - str__size__unit.length - num__size.to_s.length
+			return sprintf( "%s" + ' ' * num__spaces + "%#{ num__columns - str__size__unit.length - num__spaces }d", str__size__unit , num__size )
+		else
+			return sprintf( "%s%13d", str__ftype[ 0 .. 0 ].upcase , obj.size.to_i )
+		end
 	when 'mtime'
 		return obj.mtime.strftime( '0%Y%m%d %H%M%S' )
 	when 'execwrite'
@@ -229,8 +259,6 @@ def move__cursor
 			end
 			num__point += 1
 			flag__up_down = true
-		else
-			# flag
 		end
 
 		if flag__up_down then
@@ -668,7 +696,7 @@ begin
 		drawing
 
 		add_str( 0 , 0 , $h__win__id[ 'status_line' ] , "=" * $num__size__screen__x )
-		[ " Curshell ver. 0.05 designed by Seisei Yamaguchi " ].each{ | str__credit |
+		[ " Curshell ver. 0.06 designed by Seisei Yamaguchi " ].each{ | str__credit |
 			add_str( 0 , $num__size__screen__x - str__credit.length - 3 , $h__win__id[ 'status_line' ] , str__credit )
 		}
 #	while ! $thread__inkey.stop? 
