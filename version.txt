@@ -1,3 +1,40 @@
+ToDo
+	* First , refactoring all without adding any functions . 
+	* Fix refresh timing of screen . 
+
+
+0020031015 0.09
+	* Refactored and refactored . 
+
+0020031001
+	* Added String.times1000 . 
+
+0020030921 0.08
+	* Refactored more . 
+	* Deleted @@direntry . 
+
+0020030920
+	* I found one of the bad point . 
+
+0020030704
+	* Start to work User__mgr__file . 
+
+0020021224
+	* Changed many variables to @value . 
+	* Created @@value and module . 
+	* Created class User__mgr__window to pass message to 
+	active window or active object . 
+
+0020021209
+	Inkey-thread etc. are changed to the Object . 
+
+0020020827
+	Created User__drawing.file to chdir . 
+
+0020020826 0.07
+	Now re-architecting . 
+	read__direntory() was into User__drawing . 
+	User__drawing is renamed to User__dirlist . 
 
 0020020211
 	OO programming is started . 
