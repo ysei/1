@@ -1,0 +1,37 @@
+
+#
+# 0.00 
+# 0.03 0020011127
+# 0.04 0020011130
+
+This vertical blank interrupt emulation code is suspended from less time of multi threading . 
+
+#$thread__timer__1 = Thread.start do
+#	loop do
+#		t = Time.now
+#		$num_a__fifo__timer.push Time.at( t ).to_i * 1000000 + Time.at( t.usec ).to_i
+#		sleep 0.000033
+#	end
+#end
+#$thread__timer = Thread.start do
+#	time__now = Time.now
+#	$Num__time__start__program = Time.at( time__now ).to_i * 1000000 + Time.at( time__now.usec ).to_i
+#	$num__time__mark__refresh = $Num__time__start__program.clone
+#	$flag__time_to_refresh = true
+#	loop do
+#		loop do
+#			retry if $flag__time_to_refresh
+#
+#			begin
+#				time__now = Time.now
+#				num__time = Time.at( time__now ).to_i * 1000000 + Time.at( time__now.usec ).to_i
+#			end until num__time - $num__time__mark__refresh >= 8333  # 1/120 sec
+#
+#			$flag__time_to_refresh = true
+#			$num__time__mark__refresh = num__time.clone
+#		end
+#	end
+#end
+
+20011206 0.05
+	Earlier release from help to my father who got cancer . 
