@@ -1,6 +1,9 @@
 
+0020020211
+	OO programming is started . 
+
 0020020201
-	Fixed fatal bug of str__size__unit indication at handreds MB file . Ex. ``200.0M '' to `` 200M '' . 
+	Fixed fatal bug of str__size__unit indication at handreds MB file . Ex. ``200.2M '' to `` 200M '' . 
 
 0020011221 0.06
 	Supported file size indication of xx.xM . 

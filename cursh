@@ -7,6 +7,7 @@ require 'curses'
 include Curses
 #require 'ftools'
 #require 'open3'
+#require File.dirname( $0 ) + "/cursh.init"
 
 # udlr : ^[[A^[[B^[[C^[[D
 #>> def x(key, value, optional={}); p key; p value; p optional; end 
@@ -17,103 +18,222 @@ include Curses
 #{:time=>456, :type=>789, :context=>123} 
 #=> nil 
 
-def win__generate( num_a__win , str__win__name )
-#	obj__win = ''
-	if $str_a__win__generated.size != 0 then
-		$win[ $str_a__win__generated.size ] = $win[ $num_h__win__id[ 'base' ] ].subwin( *num_a__win )
-#		obj__win = $win[ $num_h__win__id[ 'base' ] ].subwin( *num_a__win )
-	else
-		$win[ $str_a__win__generated.size ] = Window.new( *num_a__win )
-#		obj__win = Window.new( *num_a__win )
-	end
-	$str_a__win__generated.push str__win__name
-#	$win[ $str_a__win__generated.size ] = obj__win.clone
-	return $str_a__win__generated.size - 1
+def init__curses
+	$curses_wins = User__curses_wins.new
 end
-def win__close( num__win__id )
-	$str_a__win__generated.pop
-	$win[ num__win__id ].close
-end
-def init__curses()
-#	p ""
-	init_screen
-#	close_screen
-	noecho
-#	raw
-	$num__size__screen__y = lines
-	$num__size__screen__x = cols
-	num__size__window__y = $num__size__screen__y
-	num__size__window__x = $num__size__screen__x
+class User__curses_wins
+	def initialize
+#		p ""
+		init_screen
+#		close_screen
+		noecho
+#		raw
+		num__size__window__y = lines  # curses parameter
+		num__size__window__x = cols  # curses parameter
+		$num__size__screen__y = num__size__window__y
+		$num__size__screen__x = num__size__window__x
 
-	str_a__win__kind = [ 'base' , 'inkey' , 'back__0' , 'dir_list' , 'path' , 'status_line' , 'log' , 'info' , 'front__0' ]
-	num_h__win__locate__y = {}
-	num_h__win__locate__y[ 'status_line' ] = Integer( num__size__window__y - 5 ) - ( ( num__size__window__y - 25 ) / 10 ) >> 1 << 1
-	num_h__win__locate__y[ 'log' ] = num_h__win__locate__y[ 'status_line' ] + 1
+		str_a__win__kind = [ 'base' , 'inkey' , 'back__0' , 'dir_list' , 'path' , 'status_line' , 'log' , 'info' , 'front__0' ]
+		num_h__win__locate__y = {}
+		num_h__win__locate__y[ 'status_line' ] = Integer( num__size__window__y - 5 ) - ( ( num__size__window__y - 25 ) / 10 ) >> 1 << 1
+		num_h__win__locate__y[ 'log' ] = num_h__win__locate__y[ 'status_line' ] + 1
 
-	num_h__win__size__y = {}
-	num_h__win__size__y[ 'path' ] = 1
-	num_h__win__size__y[ 'status_line' ] = 1
-	num_h__win__size__y[ 'info' ] = 4
-	num_h__win__size__y[ 'log' ] = $num__size__screen__y - ( num_h__win__locate__y[ 'status_line' ] + 1 )
+		num_h__win__size__y = {}
+		num_h__win__size__y[ 'path' ] = 1
+		num_h__win__size__y[ 'status_line' ] = 1
+		num_h__win__size__y[ 'info' ] = 4
+		num_h__win__size__y[ 'log' ] = $num__size__screen__y - ( num_h__win__locate__y[ 'status_line' ] + 1 )
 
-	num_aah__win = {}
-	num_aah__win[ 'base' ] = [ [ num__size__window__y , num__size__window__x , 0 , 0 ] ]
-	num_aah__win[ 'inkey' ] = [ [ 0 , 0 , 0 , 0 ] ]
-	num_aah__win[ 'back__0' ] = [ [ num__size__window__y , num__size__window__x , 0 , 0 ] ]
-	num_aah__win[ 'status_line' ] = [ [ num_h__win__size__y[ 'status_line' ] - 1 , num__size__window__x , num_h__win__locate__y[ 'status_line' ] , 0 ] ]
-	num_aah__win[ 'log' ] = [ [ num_h__win__size__y[ 'log' ] , num__size__window__x , num_h__win__locate__y[ 'log' ] , 0 ] ]
-	num_aah__win[ 'front__0' ] = [ [ num__size__window__y , num__size__window__x , 0 , 0 ] ]
+		@num_h__win__size__x = {}
+		@num_h__win__size__x[ 'status_line' ] = num__size__window__x
+		@num_h__win__size__x[ 'info' ] = num__size__window__x
+		@num_h__win__size__x[ 'log' ] = num__size__window__x
 
-	num_h__win__size__y[ 'dir_list' ] = ( num_h__win__locate__y[ 'status_line' ] - num_h__win__size__y[ 'info' ] - num_h__win__size__y[ 'path' ] )
-	if $num__size__screen__x < 128 then
-		num_h__win__size__y[ 'dir_list' ] >>= 1
-		$num__size__dirlist__y = num_h__win__size__y[ 'dir_list' ]
-		$num__size__dirlist__x = num__size__window__x
+		num_aah__win = {}
+		num_aah__win[ 'base' ] = [ [ num__size__window__y , num__size__window__x , 0 , 0 ] ]
+		num_aah__win[ 'inkey' ] = [ [ 0 , 0 , 0 , 0 ] ]
+		num_aah__win[ 'back__0' ] = [ [ num__size__window__y , num__size__window__x , 0 , 0 ] ]
+		num_aah__win[ 'status_line' ] = [ [ num_h__win__size__y[ 'status_line' ] - 1 , num__size__window__x , num_h__win__locate__y[ 'status_line' ] , 0 ] ]
+		num_aah__win[ 'log' ] = [ [ num_h__win__size__y[ 'log' ] , num__size__window__x , num_h__win__locate__y[ 'log' ] , 0 ] ]
+		num_aah__win[ 'front__0' ] = [ [ num__size__window__y , num__size__window__x , 0 , 0 ] ]
 
-		num_aah__win[ 'dir_list' ] = [
-			[ num_h__win__size__y[ 'dir_list' ] , $num__size__dirlist__x , 0 , 0 ] ,
-			[ num_h__win__size__y[ 'dir_list' ] , $num__size__dirlist__x , num_h__win__size__y[ 'dir_list' ] + num_h__win__size__y[ 'info' ] + num_h__win__size__y[ 'path' ] * 2 , 0 ]
-		]
-		num_aah__win[ 'path' ] = [
-			[ num_h__win__size__y[ 'path' ] , num__size__window__x , $num__size__dirlist__y , 0 ] ,
-			[ num_h__win__size__y[ 'path' ] , num__size__window__x , $num__size__dirlist__y + num_h__win__size__y[ 'info' ] + num_h__win__size__y[ 'path' ] , 0 ]
-		]
-		num_aah__win[ 'info' ] = [ [ num_h__win__size__y[ 'info' ] , num__size__window__x , $num__size__dirlist__y + num_h__win__size__y[ 'path' ] , 0 ] ]
+		num_h__win__size__y[ 'dir_list' ] = ( num_h__win__locate__y[ 'status_line' ] - num_h__win__size__y[ 'info' ] - num_h__win__size__y[ 'path' ] )
+		if $num__size__screen__x < 128 then
+			num_h__win__size__y[ 'dir_list' ] >>= 1
+			$num__size__dirlist__y = num_h__win__size__y[ 'dir_list' ]
+			@num__size__dirlist__x = num__size__window__x
+			@num_h__win__size__x[ 'dir_list' ] = num__size__window__x
+			@num_h__win__size__x[ 'path' ] = num__size__window__x
 
-		$num_a__locate__dirlist = [ [ 0 , 0 ] , [ num_h__win__size__y[ 'info' ] + num_h__win__size__y[ 'path' ] * 2 + num_h__win__size__y[ 'dir_list' ] , 0 ] ]
-	else
-		$num__size__dirlist__y = num_h__win__size__y[ 'dir_list' ]
-		$num__size__dirlist__x = num__size__window__x >> 1
-		$num__size__dirlist__x -= 1 if num__size__window__x % 2 == 0
+			num_aah__win[ 'dir_list' ] = [
+				[ num_h__win__size__y[ 'dir_list' ] , @num__size__dirlist__x , 0 , 0 ] ,
+				[ num_h__win__size__y[ 'dir_list' ] , @num__size__dirlist__x , num_h__win__size__y[ 'dir_list' ] + num_h__win__size__y[ 'info' ] + num_h__win__size__y[ 'path' ] * 2 , 0 ]
+			]
+			num_aah__win[ 'path' ] = [
+				[ num_h__win__size__y[ 'path' ] , num__size__window__x , $num__size__dirlist__y , 0 ] ,
+				[ num_h__win__size__y[ 'path' ] , num__size__window__x , $num__size__dirlist__y + num_h__win__size__y[ 'info' ] + num_h__win__size__y[ 'path' ] , 0 ]
+			]
+			num_aah__win[ 'info' ] = [ [ num_h__win__size__y[ 'info' ] , num__size__window__x , $num__size__dirlist__y + num_h__win__size__y[ 'path' ] , 0 ] ]
 
-		num_aah__win[ 'dir_list' ] = [
-			[ num_h__win__size__y[ 'dir_list' ] , $num__size__dirlist__x , num_h__win__size__y[ 'info' ] + 1 , 0 ] ,
-			[ num_h__win__size__y[ 'dir_list' ] , $num__size__dirlist__x , num_h__win__size__y[ 'info' ] + 1 , ( num__size__window__x >> 1 ) + 1 ]
-		]
-		num_aah__win[ 'path' ] = [
-			[ num_h__win__size__y[ 'path' ] , $num__size__dirlist__x , num_h__win__size__y[ 'info' ] , 0 ] ,
-			[ num_h__win__size__y[ 'path' ] , $num__size__dirlist__x , num_h__win__size__y[ 'info' ] , ( num__size__window__x >> 1 ) + 1 ]
-		]
-		num_aah__win[ 'info' ] = [ [ num_h__win__size__y[ 'info' ] - 1 , num__size__window__x , 0 , 0 ] ]
+			$num_a__locate__dirlist = [ [ 0 , 0 ] , [ num_h__win__size__y[ 'info' ] + num_h__win__size__y[ 'path' ] * 2 + num_h__win__size__y[ 'dir_list' ] , 0 ] ]
+		else
+			$num__size__dirlist__y = num_h__win__size__y[ 'dir_list' ]
+			@num__size__dirlist__x = num__size__window__x >> 1
+			@num__size__dirlist__x -= 1 if num__size__window__x % 2 == 0
+			@num_h__win__size__x[ 'dir_list' ] = @num__size__dirlist__x
+			@num_h__win__size__x[ 'path' ] = @num__size__dirlist__x
 
-		$num_a__locate__dirlist = [ [ num_h__win__size__y[ 'info' ] + num_h__win__size__y[ 'path' ] , 0 ] ,
-			[ num_h__win__size__y[ 'info' ] + num_h__win__size__y[ 'path' ] , ( num__size__window__x >> 1 ) + 1 ] ]
+			num_aah__win[ 'dir_list' ] = [
+				[ num_h__win__size__y[ 'dir_list' ] , @num__size__dirlist__x , num_h__win__size__y[ 'info' ] + 1 , 0 ] ,
+				[ num_h__win__size__y[ 'dir_list' ] , @num__size__dirlist__x , num_h__win__size__y[ 'info' ] + 1 , ( num__size__window__x >> 1 ) + 1 ]
+			]
+			num_aah__win[ 'path' ] = [
+				[ num_h__win__size__y[ 'path' ] , @num__size__dirlist__x , num_h__win__size__y[ 'info' ] , 0 ] ,
+				[ num_h__win__size__y[ 'path' ] , @num__size__dirlist__x , num_h__win__size__y[ 'info' ] , ( num__size__window__x >> 1 ) + 1 ]
+			]
+			num_aah__win[ 'info' ] = [ [ num_h__win__size__y[ 'info' ] - 1 , num__size__window__x , 0 , 0 ] ]
+
+			$num_a__locate__dirlist = [ [ num_h__win__size__y[ 'info' ] + num_h__win__size__y[ 'path' ] , 0 ] ,
+				[ num_h__win__size__y[ 'info' ] + num_h__win__size__y[ 'path' ] , ( num__size__window__x >> 1 ) + 1 ] ]
+		end
+
+		@win = {}
+		$num_h__win__id = {}
+		$str_a__win__generated = []
+
+		while str__win__name = str_a__win__kind.shift
+			num__win__this_kind = 0
+			$num_h__win__id[ str__win__name ] = num__wins()
+			while num__win__this_kind < num_aah__win[ str__win__name].size
+				win__generate( num_aah__win[ str__win__name ][ num__win__this_kind ] , str__win__name )
+				num__win__this_kind += 1
+			end
+		end
+
+		thread__inkey 'start'
 	end
-
-	$win = {}
-	$num_h__win__id = {}
-	$str_a__win__generated = []
-
-	while str__win__name = str_a__win__kind.shift
-		num__win__this_kind = 0
-		$num_h__win__id[ str__win__name ] = $str_a__win__generated.size
-		while num__win__this_kind < num_aah__win[ str__win__name].size
-			win__generate( num_aah__win[ str__win__name ][ num__win__this_kind ] , str__win__name )
-			num__win__this_kind += 1
+	def win__generate( num_a__win , str__win__name )
+		if num__wins() != 0  # array size means number of win of curses
+			@win[ $str_a__win__generated.size ] = @win[ $num_h__win__id[ 'base' ] ].subwin( *num_a__win )
+		else
+			@win[ $str_a__win__generated.size ] = Window.new( *num_a__win )
+		end
+		$str_a__win__generated.push str__win__name
+		return $str_a__win__generated.size - 1
+	end
+	def win__close( num__win__id )
+		$str_a__win__generated.pop
+		@win[ num__win__id ].close
+	end
+	def num__wins
+		return $str_a__win__generated.size
+	end
+	def set_to_cell( str__id__base_win , num__id__win , h__cell , flag_h__status )
+		num__locate__x__filename = 15
+		@num__x = 0
+		str__to_put = h__cell[ 'value__src' ]
+		case str__id__base_win
+		when 'dir_list'
+			flag__this_list_is_active = $num__active_dirlist == num__id__win
+			case h__cell[ 'str__which_cell' ]
+			when 'filename'
+				@num__x = num__locate__x__filename
+				flag__standout = flag_h__status[ 'pointed' ] & flag__this_list_is_active ^ flag_h__status[ 'marked' ]
+				put__link_info( num__id__win , h__cell , flag_h__status )
+			when 'size'
+				str__to_put = get__str__file_stat( h__cell[ 'value__src' ] , 'size' , num__id__win )
+				flag__standout = flag__this_list_is_active & flag_h__status[ 'marked' ]
+##					@flag_h__file[ 'pointed' ] & @flag__this_list_is_active
+#				@dirlist__line.put( 0 , get__str__file_stat( str__filename , 'size' , @num__id__list ) , @flag__this_list_is_active & @flag_h__file[ 'marked' ] )
+			when 'execwrite'
+				@num__x = num__locate__x__filename - 1
+				str__to_put = get__str__file_stat( h__cell[ 'value__src' ] , 'execwrite' , num__id__win )
+				flag__standout = flag_h__status[ 'pointed' ] & flag__this_list_is_active | flag_h__status[ 'marked' ] ^ flag_h__status[ 'pointed' ]
+##					@flag_h__file[ 'pointed' ] & @flag__this_list_is_active ^ @flag_h__file[ 'pointed' ]
+			when 'mtime'
+				@num__x = @num__size__dirlist__x - 16
+				str__to_put = get__str__file_stat( h__cell[ 'value__src' ] , 'mtime' , num__id__win )
+				flag__standout = flag__this_list_is_active & flag_h__status[ 'marked' ]
+##					@flag_h__file[ 'pointed' ] & @flag__this_list_is_active
+			end
+		end
+		self.addstr( h__cell[ 'num__y' ] , @num__x , $num_h__win__id[ str__id__base_win ] + num__id__win , str__to_put , flag__standout )
+	end
+	def line__spaces( num__y , str__id__win , num__id__sub_win , flag__standout = false )
+		num__id__win = $num_h__win__id[ str__id__win ] + num__id__sub_win
+		self.addstr( num__y , 0 , num__id__win , ' ' * @num_h__win__size__x[ str__id__win ] , flag__standout )
+#		self.addstr( num__y , 0 , num__id__win , ' ' * @num__size__dirlist__x , flag__standout )
+#			@num_h__win__size__x[ 'path' ] = num__size__window__x
+	end
+	def addstr( num__y , num__x , win__which , str__to_put , flag__standout = false )
+#		if x >= 0 and y >= 0
+			@win[ win__which ].setpos( num__y , num__x )
+#		end
+		@win[ win__which ].standout if flag__standout
+		@win[ win__which ].addstr( str__to_put )
+		@win[ win__which ].standend if flag__standout
+		$flag_h__refresh[ win__which ] = true
+	end
+	def setpos( num__y , num__x )
+		@win[ $num_h__win__id[ 'base' ] ].setpos( num__y , num__x )
+	end
+	def refresh( id__win )
+		@win[ id__win ].refresh
+	end
+	def clear( id__win )
+		@win[ id__win ].clear
+	end
+	def box( id__win , char__1 , char__2 )
+		@win[ id__win ].box( char__1 , char__2 )
+	end
+	private
+	def put__link_info( num__id__list , h__cell , flag_h__status )
+		return if ! h__cell[ 'obj__file' ].symlink?
+		num__id__win = $num_h__win__id[ 'dir_list' ] + num__id__list
+		str__filename = h__cell[ 'value__src' ]
+		flag__standout = ! ( flag_h__status[ 'pointed' ] ^ flag_h__status[ 'marked' ] )
+		self.addstr( h__cell[ 'num__y' ] , @num__x + str__filename.length + 1 , num__id__win , '->' , flag__standout )
+		flag__standout = flag_h__status[ 'pointed' ]
+		self.addstr( h__cell[ 'num__y' ] , @num__x + str__filename.length + 4 , num__id__win , File.readlink( h__cell[ 'str__path' ] + '/' + str__filename ) , flag__standout )
+	end
+	def get__str__file_stat( str__filename , str__kind__stat , num__id__list )
+		obj = $h__file__stat[ $str_a__path[ num__id__list ] ][ str__filename ]
+		case str__kind__stat
+		when 'size'
+			str__ftype = obj.ftype
+			num__columns = 14
+			case str__ftype
+			when 'file'
+				num__size = obj.size
+				num__length__size = num__size.to_s.length
+				num__max_length__str__size__unit = num__columns - 2 - num__length__size
+				str__size__unit = ''  # ex. `` 12.3M '' , `` 7G '' 
+				ah__unit = { 'M' => [ 20 , 'dummy' ] , 'G' => [ 30 , 'dummy' ] }
+				[ 'G' , 'M' ].each{ | str__letter__unit |
+					if num__size > 9.5 * 2 ** ah__unit[ str__letter__unit ][ 0 ]
+						str__size__unit =
+							str__round__limit_length( num__size.to_f / ( 1 << ah__unit[ str__letter__unit ][ 0 ] ) , num__max_length__str__size__unit ) + str__letter__unit
+						break
+					end
+				}
+				num__spaces = num__columns - str__size__unit.length - num__size.to_s.length
+				num__spaces = 0 if num__spaces < 0
+				return sprintf( "%s" + ' ' * num__spaces + "%#{ num__columns - str__size__unit.length - num__spaces }d", str__size__unit , num__size )
+			else
+				return sprintf( "%s%13d", str__ftype[ 0 .. 0 ].upcase , obj.size.to_i )
+			end
+		when 'mtime'
+			return obj.mtime.strftime( '0%Y%m%d %H%M%S' )
+		when 'execwrite'
+			str_a__mark__execwrite = [ ' ' , '-' , '*' , '+' ]
+			num__ptr = 0
+#		num__ptr += 1 if ! obj.writable_real?
+#		num__ptr += 2 if obj.executable_real?
+			num__ptr += 1 if ! obj.writable?
+			num__ptr += 2 if obj.executable?
+			return sprintf( "%s", str_a__mark__execwrite[ num__ptr ] )
 		end
 	end
-
-	thread__inkey 'start'
 end
 def thread__inkey( start_stop )
 	case start_stop
@@ -137,14 +257,6 @@ def thread__inkey( start_stop )
 #			sleep 0.000001
 		end
 	end
-end
-def add_str( y , x , win__which , string , flag__standout = false )
-#	if x >= 0 and y >= 0 then
-		$win[ win__which ].setpos( y , x )
-#	end
-	$win[ win__which ].standout if flag__standout
-	$win[ win__which ].addstr( string )
-	$win[ win__which ].standend if flag__standout
 end
 
 def round__limit_length( num__src , num__max_length )  # sisya_gonyuu , str_length based ( Include length of '.' ) . 
@@ -176,44 +288,6 @@ end
 def str__round__limit_length( num__src , num__max_length )
 	return round__limit_length( num__src , num__max_length ).to_s  # .gsub( /\.0$/ ){ '' }
 end
-def get__str__file_stat( str__filename , str__kind__stat , num__id__list )
-	obj = $h__file__stat[ $str_a__path[ num__id__list ] ][ str__filename ]
-	case str__kind__stat
-	when 'size'
-		str__ftype = obj.ftype
-		num__columns = 14
-		case str__ftype
-		when 'file'
-			num__size = obj.size
-			num__length__size = num__size.to_s.length
-			num__max_length__str__size__unit = num__columns - 2 - num__length__size
-			str__size__unit = ''  # ex. `` 12.3M '' , `` 7G '' 
-			ah__unit = { 'M' => [ 20 , 'dummy' ] , 'G' => [ 30 , 'dummy' ] }
-			[ 'G' , 'M' ].each{ | str__letter__unit |
-				if num__size > 9.5 * 2 ** ah__unit[ str__letter__unit ][ 0 ] then
-					str__size__unit =
-						str__round__limit_length( num__size.to_f / ( 1 << ah__unit[ str__letter__unit ][ 0 ] ) , num__max_length__str__size__unit ) + str__letter__unit
-					break
-				end
-			}
-			num__spaces = num__columns - str__size__unit.length - num__size.to_s.length
-			num__spaces = 0 if num__spaces < 0
-			return sprintf( "%s" + ' ' * num__spaces + "%#{ num__columns - str__size__unit.length - num__spaces }d", str__size__unit , num__size )
-		else
-			return sprintf( "%s%13d", str__ftype[ 0 .. 0 ].upcase , obj.size.to_i )
-		end
-	when 'mtime'
-		return obj.mtime.strftime( '0%Y%m%d %H%M%S' )
-	when 'execwrite'
-		str_a__mark__execwrite = [ ' ' , '-' , '*' , '+' ]
-		num__ptr = 0
-#		num__ptr += 1 if ! obj.writable_real?
-#		num__ptr += 2 if obj.executable_real?
-		num__ptr += 1 if ! obj.writable?
-		num__ptr += 2 if obj.executable?
-		return sprintf( "%s", str_a__mark__execwrite[ num__ptr ] )
-	end
-end
 def move__cursor__left_right( num__left_right )
 #		num_h__left_right = { 'left' => 0 , 'right' => 1 }
 #		if $num__active_dirlist == num_h__left_right[ $str__key ] then
@@ -223,7 +297,7 @@ def move__cursor__left_right( num__left_right )
 			dir__chdir '..'
 		else
 			$num__active_dirlist__old = $num__active_dirlist.clone
-			$num__active_dirlist = 1 - $num__active_dirlist
+			$num__active_dirlist = 1 - $num__active_dirlist  # 1 - 1 = 0  ,  1 - 0 = 1
 			Dir.chdir $str_a__path[ $num__active_dirlist ]
 		end
 end
@@ -233,7 +307,7 @@ def move__cursor
 	str_a__direntry = $aah__direntry[ 'sort' ][ num__id__list ]
 	flag__up_down = false
 
-	# $bit__direction  00DUrldu
+	# $bit__direction  00DUrldu  # obsolated 
 	str__key = $str_a__key[ 0 ]
 		case str__key
 		when 'left'
@@ -316,21 +390,23 @@ def move__cursor
 			case str__key
 			when 'copy'
 				break if $num_a__marking[ $num__active_dirlist ] <= 0
-				file__copy( $str_a__path[ $num__active_dirlist ] , "#{ $str_a__path[ 1 - $num__active_dirlist ] }" )
+#				file__copy( $str_a__path[ $num__active_dirlist ] , "#{ $str_a__path[ 1 - $num__active_dirlist ] }" )
+				User__file.new.copy( $str_a__path[ $num__active_dirlist ] , "#{ $str_a__path[ 1 - $num__active_dirlist ] }" )
 			when 'move'
 				break if $num_a__marking[ $num__active_dirlist ] <= 0
-				file__move( $str_a__path[ $num__active_dirlist ] , "#{ $str_a__path[ 1 - $num__active_dirlist ] }" )
+				User__file.new.move( $str_a__path[ $num__active_dirlist ] , "#{ $str_a__path[ 1 - $num__active_dirlist ] }" )
 			when 'kill'
 				break if $num_a__marking[ $num__active_dirlist ] <= 0
-				file__kill( $str_a__path[ $num__active_dirlist ] )
+				User__file.new.kill( $str_a__path[ $num__active_dirlist ] )
 			when 'mkdir'
-				file__mkdir( $str_a__path[ $num__active_dirlist ] )
+				User__file.new.mkdir( $str_a__path[ $num__active_dirlist ] )
+#				file__mkdir( $str_a__path[ $num__active_dirlist ] )
 			when 'jump'
 				$str__mode = 'jump'
 				num__win__id = win__generate( [ 18 , $num__size__screen__x - 10 , 9 , 10 >> 1 ] , 'jump' )
-				$win[ num__win__id ].clear
-				$win[ num__win__id ].box( ?| , ?- )
-				$win[ num__win__id ].refresh
+				$curses_wins.clear( num__win__id )
+				$curses_wins.box( num__win__id , ?| , ?- )
+				$curses_wins.refresh( num__win__id )
 				$num__win__jump = num__win__id
 			when 'edit'
 				command__system "emacs #{ $str_a__path[ $num__active_dirlist ] }/#{ $aah__direntry[ 'sort' ][ $num__active_dirlist ][ $num_a__point_which_file[ $num__active_dirlist ] ]}"
@@ -339,132 +415,140 @@ def move__cursor
 			end
 #		end
 end
-def num_a__get__y__locate( num__id__list )
-	num__point = $num_a__point_which_file[ num__id__list ]
-	num__size__y = $num__size__dirlist__y
-	num__dif = num__point - ( num__size__y - 1 )
 
-	num__start__listing = $num_a__start__listing_file[ num__id__list ]
-	$num_a__start__listing_file__old[ num__id__list ] = num__start__listing
-	num__start__listing = 0 if $aah__direntry[ 'sort' ][ num__id__list ].length <= num__size__y
-
-	num__locate__cur = num__point - num__start__listing
-
-	num__limit = $aah__direntry[ 'sort' ][ num__id__list ].length - 1 - num__start__listing
-
-	if num__point < num__start__listing then
-		num__locate__cur = 0
-		num__start__listing = num__point
-	elsif num__point - num__start__listing > ( num__size__y - 1 ) then
-		num__start__listing = num__point - ( num__size__y - 1 )
-		num__locate__cur = num__size__y - 1
+class User__drawing
+	def initialize( num__id__list )
+		@num__id__list = num__id__list
+		@num__id__this_win = $num_h__win__id[ 'dir_list' ] + @num__id__list
+		@num__locate__cur__old = $num_a__locate__cur[ @num__id__list ].clone
 	end
-	num__locate__cur__old = $num_a__locate__cur[ num__id__list ]
-	$num_a__locate__cur[ num__id__list ] = num__locate__cur
-	$num_a__start__listing_file[ num__id__list ] = num__start__listing
-	return num__start__listing , num__locate__cur , num__locate__cur__old
-end
-def listing__dir__clear_line( num__id__list , num__count__y , flag__standout )
-	add_str( num__count__y , 0 , $num_h__win__id[ 'dir_list' ] + num__id__list , " " * $num__size__dirlist__x , flag__standout )
-end
-def listing__dir( num__id__list )
-	num__id__this_win = $num_h__win__id[ 'dir_list' ] + num__id__list
-	str__path = $str_a__path[ num__id__list ]
-	flag__this_list_is_active = $num__active_dirlist == num__id__list
-	flag__first_time_after_inactive = $num__active_dirlist != $num__active_dirlist__old
 
-	str_a__direntry = $aah__direntry[ 'sort' ][ num__id__list ]
-	add_str( 0 , 0 , $num_h__win__id[ 'path' ] + num__id__list , " " * $num__size__dirlist__x  ) #$num__size__screen__x )
-	add_str( 0 , 0 , $num_h__win__id[ 'path' ] + num__id__list , str__path , true )
+	def listing__dir
+		@str__path = $str_a__path[ @num__id__list ]
+		@flag__this_list_is_active = $num__active_dirlist == @num__id__list
+		@flag__first_time_after_inactive = $num__active_dirlist != $num__active_dirlist__old
+		@flag_h__redraw__all = $flag__initialize
 
-	num__locate__x__filename = 15
-	( num__start__listing_file , num__locate__cur , num__locate__cur__old ) = num_a__get__y__locate( num__id__list )
+		@str_a__direntry = $aah__direntry[ 'sort' ][ @num__id__list ]
+		$curses_wins.line__spaces( 0 , 'path' , @num__id__list )
+		$curses_wins.addstr( 0 , 0 , $num_h__win__id[ 'path' ] + @num__id__list , @str__path , true )
 
-	num__lines__draw =
-		if $num_a__start__listing_file[ num__id__list ] == $num_a__start__listing_file__old[ num__id__list ] then 1
-#		else 15 - $a__keybuf.length
-		else 8 + ( $num__size__dirlist__y >> 1 ) - ( $a__keybuf.length << 1 )
+		@num__locate__x__filename = 15
+		( @num__start__listing_file , @num__locate__cur ) = num_a__get__y__locate
+
+		num__lines__draw =
+			if $num_a__start__listing_file[ @num__id__list ] == $num_a__start__listing_file__old[ @num__id__list ] then 1
+#			else 15 - $a__keybuf.length
+			else 8 + ( $num__size__dirlist__y >> 1 ) - ( $a__keybuf.length << 1 )
+			end
+		num__lines__draw = 2 if num__lines__draw < 2
+		for @num__count__y in 0 .. $num__size__dirlist__y - 1
+			@num__count__y = $num__size__dirlist__y - 1 - @num__count__y if $num_a__cur__direction[ @num__id__list ] > 0
+			@flag_h__file = {
+				'marked'  => $flag_aa__file__marked[ @num__id__list ][ @num__start__listing_file + @num__count__y ] ,
+				'pointed' => @num__count__y == @num__locate__cur && @flag__this_list_is_active
+			}
+			@flag_h__cleared__line = false
+			if $num_a__start__listing_file[ @num__id__list ] != $num_a__start__listing_file__old[ @num__id__list ] then
+				listing__dir__clear_line( @num__count__y , @flag_h__file[ 'pointed' ] | @flag_h__file[ 'marked' ] & @flag__this_list_is_active )
+			end
+			if @flag_h__redraw__all
+			else
+				if ( ( @num__locate__cur - @num__count__y ) * $num_a__cur__direction[ @num__id__list ] > num__lines__draw or
+					( @num__locate__cur - @num__count__y ) * $num_a__cur__direction[ @num__id__list ] < 0 )
+				then
+					next if @num__locate__cur__old != @num__count__y  # for refresh the line there was cursor before moving cursor
+				end
+			end
+			listing__dir__clear_line( @num__count__y , @flag_h__file[ 'pointed' ] | @flag_h__file[ 'marked' ] & @flag__this_list_is_active )
+			if @str_a__direntry.length == 0
+				$curses_wins.setpos( $num_a__locate__dirlist[ @num__id__list ][ 0 ] + @num__locate__cur , 14 + $num_a__locate__dirlist[ @num__id__list ][ 1 ] )
+				next
+			end
+#			next if $a__keybuf.length > 7
+			draw__list
 		end
-	num__lines__draw = 2 if num__lines__draw < 2
-	for num__count__y in 0 .. $num__size__dirlist__y - 1
-		num__count__y = $num__size__dirlist__y - 1 - num__count__y if $num_a__cur__direction[ num__id__list ] > 0
-		flag__marked = $flag_aa__file__marked[ num__id__list ][ num__start__listing_file + num__count__y ]
-		flag__pointed = num__count__y == num__locate__cur && flag__this_list_is_active
-		flag__cleared__line = false
-		if $num_a__start__listing_file[ num__id__list ] != $num_a__start__listing_file__old[ num__id__list ] then
-			flag__clear__line = true
-			listing__dir__clear_line( num__id__list , num__count__y , flag__pointed & flag__this_list_is_active )
+		set__flag__refresh__eacn_win
+
+		@num__locate__cur__old = @num__locate__cur.clone
+	end
+	def listing__dir__clear_line( num__count__y , flag__standout )
+		return if @flag_h__cleared__line
+		$curses_wins.line__spaces( num__count__y , 'dir_list' , @num__id__list , flag__standout )
+
+		@flag_h__cleared__line = true
+	end
+
+	private
+	def num_a__get__y__locate
+		num__point = $num_a__point_which_file[ @num__id__list ]
+		num__size__y = $num__size__dirlist__y
+		num__dif = num__point - ( num__size__y - 1 )
+
+		num__start__listing = $num_a__start__listing_file[ @num__id__list ]
+		$num_a__start__listing_file__old[ @num__id__list ] = num__start__listing
+		num__start__listing = 0 if $aah__direntry[ 'sort' ][ @num__id__list ].length <= num__size__y
+
+		num__locate__cur = num__point - num__start__listing
+
+		num__limit = $aah__direntry[ 'sort' ][ @num__id__list ].length - 1 - num__start__listing
+
+		if num__point < num__start__listing then
+			num__locate__cur = 0
+			num__start__listing = num__point
+		elsif num__point - num__start__listing > ( num__size__y - 1 ) then
+			num__start__listing = num__point - ( num__size__y - 1 )
+			num__locate__cur = num__size__y - 1
 		end
-		if ! $flag_ah__force_redraw[ 'dir_list' ][ num__id__list ] and ! $flag__initialize then
-			if ( ( num__locate__cur - num__count__y ) * $num_a__cur__direction[ num__id__list ] > num__lines__draw or
-				( num__locate__cur - num__count__y ) * $num_a__cur__direction[ num__id__list ] < 0 )
-			then
-				next if num__locate__cur__old != num__count__y
+		$num_a__locate__cur[ @num__id__list ] = num__locate__cur
+		$num_a__start__listing_file[ @num__id__list ] = num__start__listing
+		return num__start__listing , num__locate__cur
+	end
+
+	private
+	def draw__list
+		str__filename = @str_a__direntry[ @num__start__listing_file + @num__count__y ]
+		if  @str_a__direntry.length  >  @num__start__listing_file + @num__count__y
+			obj = $h__file__stat[ $str_a__path[ @num__id__list ] ][ str__filename ]
+			$curses_wins.set_to_cell( 'dir_list' , @num__id__list ,
+				{ 'str__which_cell' => 'filename' , 'num__y' => @num__count__y , 'value__src' => str__filename , 'obj__file' => obj , 'str__path' => @str__path } ,
+				@flag_h__file )
+			$curses_wins.set_to_cell( 'dir_list' , @num__id__list ,
+				{ 'str__which_cell' => 'size' , 'num__y' => @num__count__y , 'value__src' => str__filename , 'obj__file' => obj } ,
+				@flag_h__file )
+			$curses_wins.set_to_cell( 'dir_list' , @num__id__list ,
+#				{ 'str__which_cell' => 'execwrite' , 'num__y' => @num__count__y , 'value__src' => get__str__file_stat( str__filename , 'execwrite' , @num__id__list ) , 'obj__file' => obj } ,
+				{ 'str__which_cell' => 'execwrite' , 'num__y' => @num__count__y , 'value__src' => str__filename , 'obj__file' => obj } ,
+				@flag_h__file )
+			$curses_wins.set_to_cell( 'dir_list' , @num__id__list ,
+#				{ 'str__which_cell' => 'mtime' , 'num__y' => @num__count__y , 'value__src' => get__str__file_stat( str__filename , 'mtime' , @num__id__list ) , 'obj__file' => obj } ,
+				{ 'str__which_cell' => 'mtime' , 'num__y' => @num__count__y , 'value__src' => str__filename , 'obj__file' => obj } ,
+				@flag_h__file )
+			if @flag_h__file[ 'pointed' ] and @flag__this_list_is_active
+				$curses_wins.addstr( 0 , 0 , $num_h__win__id[ 'info' ] , ' ' * $num__size__screen__x )
+				$curses_wins.addstr( 0 , 0 , $num_h__win__id[ 'info' ] , "#{ sprintf( \"%#04o\" , obj.mode ) } #{ str__filename }" )
+				$curses_wins.setpos( $num_a__locate__dirlist[ @num__id__list ][ 0 ] + @num__locate__cur , 14 + $num_a__locate__dirlist[ @num__id__list ][ 1 ] )
 			end
 		end
-		if ! flag__clear__line then
-			listing__dir__clear_line( num__id__list , num__count__y , flag__pointed & flag__this_list_is_active )
-		end
-		if str_a__direntry.length == 0
-			$win[ $num_h__win__id[ 'base' ] ].setpos( $num_a__locate__dirlist[ num__id__list ][ 0 ] + num__locate__cur , 14 + $num_a__locate__dirlist[ num__id__list ][ 1 ] )
-			next
-		end
-#		next if $a__keybuf.length > 7
-		str__filename = str_a__direntry[ num__start__listing_file + num__count__y ]
-		if  str_a__direntry.length  >  num__start__listing_file + num__count__y  then
-			obj = $h__file__stat[ $str_a__path[ num__id__list ] ][ str__filename ]
-			add_str(
-				num__count__y , num__locate__x__filename , num__id__this_win , "#{ str__filename }" ,
-					flag__pointed & flag__this_list_is_active ^ flag__marked
-			)
-			add_str(
-				num__count__y , 0 , num__id__this_win , get__str__file_stat( str__filename , 'size' , num__id__list ) ,
-					flag__pointed & flag__this_list_is_active
-			)
-			add_str(
-				num__count__y , num__locate__x__filename - 1 , num__id__this_win , get__str__file_stat( str__filename , 'execwrite' , num__id__list ) ,
-					flag__pointed & flag__this_list_is_active ^ flag__pointed
-			)
-			add_str(
-				num__count__y , $num__size__dirlist__x - 16 , num__id__this_win , get__str__file_stat( str__filename , 'mtime' , num__id__list ) ,
-					flag__pointed & flag__this_list_is_active
-			)
-			if obj.symlink? then
-				add_str(
-					num__count__y , num__locate__x__filename + str__filename.length + 1 , num__id__this_win , '->' ,
-						! ( flag__pointed ^ flag__marked )
-				)
-				add_str(
-					num__count__y , num__locate__x__filename + str__filename.length + 4 , num__id__this_win , File.readlink( str__path + '/' + str__filename ) ,
-						flag__pointed
-				)
-			end
-			if flag__pointed and flag__this_list_is_active then
-				add_str( 0 , 0 , $num_h__win__id[ 'info' ] , ' ' * $num__size__screen__x )
-				add_str( 0 , 0 , $num_h__win__id[ 'info' ] , "#{ sprintf( \"%#04o\" , obj.mode ) } #{ str__filename }" )
-				$win[ $num_h__win__id[ 'base' ] ].setpos( $num_a__locate__dirlist[ num__id__list ][ 0 ] + num__locate__cur , 14 + $num_a__locate__dirlist[ num__id__list ][ 1 ] )
-			end
-		end
 	end
 
-	if flag__this_list_is_active then
-		if $flag__initialize then
-			$flag_h__refresh[ num__id__this_win ] = true
-			$flag_h__refresh[ $num_h__win__id[ 'path' ] + num__id__list ] = true
+	private
+	def set__flag__refresh__eacn_win
+		if @flag__this_list_is_active
+			if @flag_h__redraw__all
+				$flag_h__refresh[ @num__id__this_win ] = true
+				$flag_h__refresh[ $num_h__win__id[ 'path' ] + @num__id__list ] = true
+			end
+			if ( $num_a__point_which_file[ @num__id__list ] != $num_a__point_which_file__old[ @num__id__list ] or @flag__first_time_after_inactive )
+				$flag_h__refresh[ @num__id__this_win ] = true
+				$flag_h__refresh[ $num_h__win__id[ 'info' ] ] = true
+			end
+		elsif @flag__first_time_after_inactive
+			$flag_h__refresh[ @num__id__this_win ] = true
+			$flag_h__refresh[ $num_h__win__id[ 'path' ] + @num__id__list ] = true
 		end
-		if ( $num_a__point_which_file[ num__id__list ] != $num_a__point_which_file__old[ num__id__list ] or flag__first_time_after_inactive ) then
-			$flag_h__refresh[ num__id__this_win ] = true
-			$flag_h__refresh[ $num_h__win__id[ 'info' ] ] = true
-		end
-	elsif flag__first_time_after_inactive then
-		$flag_h__refresh[ num__id__this_win ] = true
-		$flag_h__refresh[ $num_h__win__id[ 'path' ] + num__id__list ] = true
-	end
-	if $flag_ah__force_redraw[ 'dir_list' ][ num__id__list ] then
-		$flag_h__refresh[ num__id__this_win ] = true
 	end
 end
-
 def read__direntry( num__id__list )
 	return if ! $flag_ah__initialize[ 'read__direntry' ][ num__id__list ]
 	$h__file__stat[ $str_a__path[ num__id__list ] ] = {}
@@ -513,7 +597,7 @@ def init__all()
 	$str_a__key = [ '' ]
 	$flag__initialize = true
 	$flag_ah__initialize = { 'read__direntry' => [ true , true ] }
-	init__curses
+	init__curses()
 	$num_a__cur__direction = [ 1 , 1 ]
 	$num_a__point_which_file = [ 0 , 0 ]
 	$num_a__point_which_file__old = [ 0 , 0 ]
@@ -566,8 +650,8 @@ def init__all()
 	$aah__direntry[ 'sort' ] = [ [] , [] ]
 
 
-	$flag_ah__force_redraw = {}
-	$flag_ah__force_redraw[ 'dir_list' ] = [ false , false ]
+#	$flag_ah__force_redraw = {}
+#	$flag_ah__force_redraw[ 'dir_list' ] = [ false , false ]
 	$num__countdown__force_redraw = [ 0 , 0 ]
 end
 
@@ -578,26 +662,31 @@ def str__files__from
 	end
 	yield  str__files
 end
-def file__copy( from__path , path__to )
-	return if from__path == path__to
-	str__files__from{ | str__files | command__system "tar -cv -C #{ from__path } -f - #{ str__files } | tar -x -C #{ path__to } -f -" }
+class User__file  # < Inhe
+#	def initialize( var )
+#		@var = var
+#	end
+
+	def copy( from__path , to__path )
+		return if from__path == to__path
+	str__files__from{ | str__files | command__system "tar -cv -C #{ from__path } -f - #{ str__files } | tar -x -C #{ to__path } -f -" }
 #		read__direntry( 1 - $num__active_dirlist )
 #	from__path += '/' if from__path != ''
 #	File.copy( from__path + from__file , file__to , true )
 #	File.utime( $h__file__stat[ $str_a__path[ $num__active_dirlist ] ][ from__file ].atime , $h__file__stat[ $str_a__path[ $num__active_dirlist ] ][ from__file ].mtime , file__to + '/' + from__file )
-end
-def file__move( from__path , path__to )
-	str__files__from{ | str__files | command__system "cd #{ from__path } && mv -v #{ str__files } #{ path__to }" }
+	end
+	def move( from__path , to__path )
+		str__files__from{ | str__files | command__system "cd #{ from__path } && mv -v #{ str__files } #{ to__path }" }
 #		read__direntry( $num__active_dirlist )
 #		read__direntry( 1 - $num__active_dirlist )
+	end
+	def kill( from__path )
+		str__files__from{ | str__files | command__system "cd #{ from__path } && rm -Rvi #{ str__files }" }
+	end
+	def mkdir( from__path )
+		str__files__from{ | str__files | command__system "cd #{ from__path } && echo -n 'New-dir neme : ' && mkdir `head -n 1 /dev/stdin`" }
+	end
 end
-def file__kill( from__path )
-	str__files__from{ | str__files | command__system "cd #{ from__path } && rm -Rvi #{ str__files }" }
-end
-def file__mkdir( from__path )
-	str__files__from{ | str__files | command__system "cd #{ from__path } && echo -n 'New-dir neme : ' && mkdir `head -n 1 /dev/stdin`" }
-end
-
 
 def command__system( str__command_line )
 	Thread.kill( $thread__inkey )
@@ -618,7 +707,6 @@ def dir__chdir( str__dir )
 		$str_a__path[ $num__active_dirlist ] = Dir.getwd
 	$flag_ah__initialize[ 'read__direntry' ][ $num__active_dirlist ] = true
 		$flag__initialize = true
-		$flag_ah__force_redraw[ 'dir_list' ][ $num__active_dirlist ] = true
 	$num_a__point_which_file[ $num__active_dirlist ] = 0
 end
 
@@ -660,19 +748,63 @@ end
 
 def drawing
 	# $mode
-		[ 0 , 1 ].each{ | num__id__list |
-		$flag_ah__force_redraw[ 'dir_list' ][ num__id__list ] =
-			if $num__countdown__force_redraw[ num__id__list ] == 0 then true
-			else false
-			end
-			$num__countdown__force_redraw[ num__id__list ] -= 1 if $num__countdown__force_redraw[ num__id__list ] > -65535
-			listing__dir( num__id__list )
-		}
+	[ 0 , 1 ].each{ | num__id__list |
+		read__direntry( num__id__list )  # read direntry
+
+#		$flag_ah__force_redraw[ 'dir_list' ][ num__id__list ] =
+#			if $num__countdown__force_redraw[ num__id__list ] == 0 then true
+#			else false
+#			end
+		$num__countdown__force_redraw[ num__id__list ] -= 1 if $num__countdown__force_redraw[ num__id__list ] > -65535
+		$win__dirlist[ num__id__list ].listing__dir  #( num__id__list )
+#		listing__dir( num__id__list )
+	}
 #	$flag__reflesh__force = true
 end
 
-	
+def wait__pseudo_vdisp
+#	while ! $thread__inkey.stop? 
+#	end
+#	thread__inkey start
+
+		$curses_wins.addstr( 0 , 0 , $num_h__win__id[ 'status_line' ] , "=" * $num__size__screen__x )
+		[ " Curshell ver. 0.06 designed by Seisei Yamaguchi " ].each{ | str__credit |
+			$curses_wins.addstr( 0 , $num__size__screen__x - str__credit.length - 3 , $num_h__win__id[ 'status_line' ] , str__credit )
+		}
+
+		if $num__countdown_to_refresh != 0 then
+			$num__countdown_to_refresh -= 1
+		else
+				begin
+#					sleep 0.000033
+					time__now = Time.now
+					num__time = Time.at( time__now ).to_i * 1000000 + Time.at( time__now.usec ).to_i
+				end until num__time - $num__time__mark__refresh >= 8333  # 1/120 sec
+#				end until num__time - $num__time__mark__refresh >= 16666  # 1/60 sec
+				$num__time__mark__refresh = num__time.clone
+#			else
+				$flag__refleshing = true
+				$flag_h__refresh.each{ | key , value |
+					if value then
+						$curses_wins.refresh( key )
+						$flag_h__refresh[ key ] = false
+					end
+				}
+#			[ 1 .. 8 ].each{ | num | $win[  ].refresh
+			$curses_wins.refresh( $num_h__win__id[ 'base' ] )
+			$flag__refleshing = false
+		
+			#	$flag__time_to_refresh = false
+			$flag__reflesh__force = false
+			$num__countdown_to_refresh = $a__keybuf.length >> 2
+		end
+		$flag__draw__force = ! $flag__reflesh__force
+end
+
 init__all()
+$win__dirlist = []
+$win__dirlist[ 0 ] = User__drawing.new( 0 )
+$win__dirlist[ 1 ] = User__drawing.new( 1 )
 
 $flag__esc = false
 
@@ -694,48 +826,13 @@ begin
 		get__code__ctrl
 #	Thread.kill( $thread__inkey )
 		move__cursor
-		read__direntry( 0 ) ; read__direntry( 1 )
-		drawing
+		wait__pseudo_vdisp
 
-		add_str( 0 , 0 , $num_h__win__id[ 'status_line' ] , "=" * $num__size__screen__x )
-		[ " Curshell ver. 0.06 designed by Seisei Yamaguchi " ].each{ | str__credit |
-			add_str( 0 , $num__size__screen__x - str__credit.length - 3 , $num_h__win__id[ 'status_line' ] , str__credit )
-		}
-#	while ! $thread__inkey.stop? 
-#	end
-#	thread__inkey start
+		drawing
 
 		$flag__initialize = false
 		$flag_ah__initialize[ 'read__direntry' ][ 0 ] = false
 		$flag_ah__initialize[ 'read__direntry' ][ 1 ] = false
-
-		if $num__countdown_to_refresh != 0 then
-			$num__countdown_to_refresh -= 1
-		else
-				begin
-#					sleep 0.000033
-					time__now = Time.now
-					num__time = Time.at( time__now ).to_i * 1000000 + Time.at( time__now.usec ).to_i
-				end until num__time - $num__time__mark__refresh >= 8333  # 1/120 sec
-#				end until num__time - $num__time__mark__refresh >= 16666  # 1/60 sec
-				$num__time__mark__refresh = num__time.clone
-#			else
-				$flag__refleshing = true
-				$flag_h__refresh.each{ | key , value |
-					if value then
-						$win[ key ].refresh
-						$flag_h__refresh[ key ] = false
-					end
-				}
-#				[ 1 .. 8 ].each{ | num | $win[  ].refresh
-				$win[ $num_h__win__id[ 'base' ] ].refresh 
-				$flag__refleshing = false
-		
-			#	$flag__time_to_refresh = false
-			$flag__reflesh__force = false
-		$num__countdown_to_refresh = $a__keybuf.length >> 2
-		end
-$flag__draw__force = ! $flag__reflesh__force
 	end
 ensure
 	close_screen
